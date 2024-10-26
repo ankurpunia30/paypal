@@ -1,0 +1,60 @@
+/* Reset some default browser styling */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f2f5;
+    font-family: Arial, sans-serif;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #ffffff;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+form input[type="text"],
+form input[type="email"] {
+    margin-bottom: 15px;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    color: #333;
+    width: 100%;
+}
+
+form input[type="submit"] {
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #0070ba;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+form input[type="submit"]:hover {
+    background-color: #005fa3;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 400px) {
+    form {
+        padding: 15px;
+    }
+}

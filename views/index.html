@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayPal Payment</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Hide the spinner by default */
+        #loading-spinner {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <form id="payment-form" class="border p-4 rounded shadow-sm bg-white">
+                    <h3 class="text-center mb-4">Payment Form</h3>
+                    
+                    <div class="form-group animated-input">
+                        <input type="text" class="form-control" name="name" placeholder=" " required>
+                        <label class="animated-label" for="name">Name</label>
+                    </div>
+
+                    <div class="form-group animated-input">
+                        <input type="email" class="form-control" name="email" placeholder=" " required>
+                        <label class="animated-label" for="email">Email</label>
+                    </div>
+
+                    <div class="form-group animated-input">
+                        <input type="text" class="form-control" name="phone" placeholder=" " required>
+                        <label class="animated-label" for="phone">Phone</label>
+                    </div>
+
+                    <div class="form-group animated-input">
+                        <input type="text" class="form-control" name="address" placeholder=" " required>
+                        <label class="animated-label" for="address">Address</label>
+                    </div>
+
+                    <div class="form-group animated-input">
+                        <input type="text" class="form-control" name="city" placeholder=" " required>
+                        <label class="animated-label" for="city">City</label>
+                    </div>
+
+                    <div class="form-group animated-input">
+                        <input type="text" class="form-control" name="state" placeholder=" " required>
+                        <label class="animated-label" for="state">State</label>
+                    </div>
+
+                    <div class="form-group animated-input">
+                        <input type="text" class="form-control" name="zip" placeholder=" " required>
+                        <label class="animated-label" for="zip">Zip</label>
+                    </div>
+
+                    <div class="form-group animated-input">
+                        <input type="text" class="form-control" name="country" placeholder=" " required>
+                        <label class="animated-label" for="country">Country</label>
+                    </div>
+
+                    <div class="form-group animated-input">
+                        <input type="text" class="form-control" name="amount" placeholder=" " required>
+                        <label class="animated-label" for="amount">Amount</label>
+                    </div>
+
+                    <button type="button" id="paypal-button" class="btn btn-primary btn-block mt-3" disabled>Pay with PayPal</button>
+                    <div class="spinner-border text-primary mt-3" id="loading-spinner" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </form>
+                <div id="paypal-button-container" class="mt-3" style="display: none;"></div> <!-- Hidden initially -->
+                <div id="message" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=AVrbfkO2njygEjpr7QH9BDUScTQfzLLzQHuhR5yRiPeFac0uHr0uCyWTg94gC0lRI1RnYkh-beJBK0fU&currency=USD"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script>
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const messageDiv = document.getElementById('message');
+        const paypalButton = document.getElementById('paypal-button');
+        const paymentForm = document.getElementById('payment-form');
+        const paypalButtonContainer = document.getElementById('paypal-button-container');
+
+        // Function to check form validity
+        function checkFormValidity() {
+            const allFieldsFilled = Array.from(paymentForm.elements).every(input => {
+                return input.checkValidity(); // Check if each input is valid
+            });
+            paypalButton.disabled = !allFieldsFilled; // Enable or disable button based on validity
+            
+            // Show/hide PayPal button based on form validity
+            paypalButtonContainer.style.display = allFieldsFilled ? 'block' : 'none'; 
+        }
+
+        // Validate form fields on input event
+        paymentForm.addEventListener('input', checkFormValidity);
+
+        paypal.Buttons({
+            createOrder: function(data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: {
+                            value: document.querySelector('input[name="amount"]').value  // Use amount from the form
+                        }
+                    }]
+                });
+            },
+            onApprove: function(data, actions) {
+                loadingSpinner.style.display = 'block'; // Show loading spinner
+
+                return actions.order.capture().then(function(details) {
+                    const formData = {
+                        name: document.querySelector('input[name="name"]').value,
+                        email: document.querySelector('input[name="email"]').value,
+                        phone: document.querySelector('input[name="phone"]').value,
+                        address: document.querySelector('input[name="address"]').value,
+                        city: document.querySelector('input[name="city"]').value,
+                        state: document.querySelector('input[name="state"]').value,
+                        zip: document.querySelector('input[name="zip"]').value,
+                        country: document.querySelector('input[name="country"]').value,
+                        amount: document.querySelector('input[name="amount"]').value,
+                        paymentID: details.id,  // Get the payment ID
+                        status: details.status    // Get the payment status
+                    };
+
+                    // Send the data to the server using Axios
+                    return axios.post('/api/payment', formData)
+                        .then(response => {
+                            loadingSpinner.style.display = 'none'; // Hide loading spinner
+                            messageDiv.innerHTML = `<div class="alert alert-success">${response.data.message}</div>`; // Show success message
+                            // Redirect to the thank-you page
+                            window.location.href = '/thank-you'; // Change this to your actual thank-you page URL
+                        })
+                        .catch(error => {
+                            loadingSpinner.style.display = 'none'; // Hide loading spinner
+                            messageDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.response ? error.response.data.message : 'An error occurred'}</div>`;
+                        });
+                });
+            },
+            onError: function (err) {
+                loadingSpinner.style.display = 'none'; // Hide loading spinner
+                messageDiv.innerHTML = '<div class="alert alert-danger">An error occurred during the transaction</div>';
+            }
+        }).render('#paypal-button-container');
+    </script>
+</body>
+</html>
